@@ -81,11 +81,11 @@ func (m *Matchmaker) FindMatch(ctx context.Context, player *Player) (*Match, err
 		}
 		return nil, nil
 	case match := <-foundMatch:
+		m.foundMatchNotifier.unregisterListener(player.ID)
+
 		if match == nil {
 			return nil, fmt.Errorf("match not found for player %s", player.ID)
 		}
-
-		m.foundMatchNotifier.unregisterListener(player.ID)
 
 		return match, nil
 	}
