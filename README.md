@@ -4,6 +4,39 @@
 ![Tests](https://github.com/ivanlemeshev/matchmaking-service/actions/workflows/test.yml/badge.svg)
 ![Linter](https://github.com/ivanlemeshev/matchmaking-service/actions/workflows/lint.yml/badge.svg)
 
+## Description
+
+This is a simple matchmaking service that allows players to find matches based
+on their level.
+
+It is possible to configure the number of players in a match and the
+matchmaking timeout.
+
+It uses Protobuf and gRPC for communication between clients and the server.
+
+Buf is used for generating Protobuf files.
+
+There are configured GitHub Actions for building, testing and linting.
+
+It is not production-ready and does not have a lot of nessesary features like:
+
+- Persistence
+- Graceful shutdown
+- Health checks
+- Logging
+- Monitoring
+- Security
+- Deployment
+- etc.
+
+I have implemented only the core functionality and matchmaking logic. It still
+requires a lot of work to be production-ready and some refactoring.
+
+I used GitHub Copilot for some autocomplete suggestions, tests and comments.
+
+I also used Gemini Advanced 2.0 Flash to resolve some issues and find some
+matchmaking algorithms I can use.
+
 ## Requirements
 
 - [Go 1.24.0](https://go.dev/doc/install)

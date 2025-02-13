@@ -10,7 +10,7 @@ import (
 type Config struct {
 	ServiceName        string        `env:"SERVICE_NAME" envDefault:"matchmaking-service"`
 	Port               int           `env:"PORT" envDefault:"8080"`
-	PlayersInMatch     int           `env:"PLAYERS_IN_MATCH" envDefault:"2"`
+	PlayersInMatch     int           `env:"PLAYERS_IN_MATCH" envDefault:"10"`
 	MatchmakingTimeout time.Duration `env:"MATCHMAKING_TIMEOUT" envDefault:"1m"`
 }
 
