@@ -9,3 +9,11 @@
 
 - [Go 1.24.0](https://go.dev/doc/install)
 - [Buf 1.50.0](https://buf.build/docs/cli/installation/)
+- [grpcurl](https://github.com/fullstorydev/grpcurl?tab=readme-ov-file#installation)
+
+## Run and make requests
+
+```bash
+go run cmd/main.go
+grpcurl -plaintext localhost:10000 matchmaking.v1.MatchmakingService/FindMatch
+```
