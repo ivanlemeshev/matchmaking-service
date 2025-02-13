@@ -8,4 +8,8 @@ api-generate:
 
 .PHONY: test
 test:
-	go test -v -race -cover -timeout 30s ./...
+	go test -race -cover -timeout 30s ./...
+
+.PHONY: run
+run:
+	go run cmd/main.go

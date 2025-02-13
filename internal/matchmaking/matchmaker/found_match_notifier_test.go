@@ -29,7 +29,7 @@ func TestFoundMatchNotifier(t *testing.T) {
 	})
 
 	t.Run("should notify listeners", func(t *testing.T) {
-		matchID := int64(123)
+		matchID := uint64(123)
 		match := Match{ID: matchID}
 
 		wg := sync.WaitGroup{}

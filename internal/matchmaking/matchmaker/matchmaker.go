@@ -15,7 +15,7 @@ type Player struct {
 
 // Match struct to represent a match between players.
 type Match struct {
-	ID      int64
+	ID      uint64
 	Players []*Player
 }
 
@@ -25,7 +25,7 @@ type Option func(*Matchmaker)
 // Matchmaker represents a matchmaking system with multiple tiers.
 type Matchmaker struct {
 	playersInMatch     int
-	matchID            int64 // Assume we have a global match ID counter.
+	matchID            uint64 // Assume we have a global match ID counter.
 	tiers              []*tier
 	foundMatchNotifier *foundMatchNotifier
 }
@@ -123,9 +123,9 @@ func (m *Matchmaker) run(ctx context.Context) {
 
 // createMatch creates a match with the given players.
 func (m *Matchmaker) createMatch(players []*Player) *Match {
-	matchID := atomic.AddInt64(&m.matchID, 1)
+	matchID := atomic.AddUint64(&m.matchID, 1)
 	return &Match{
-		ID:      matchID,
+		ID:      uint64(matchID),
 		Players: players,
 	}
 }

@@ -14,6 +14,21 @@
 ## Run and make requests
 
 ```bash
-go run cmd/main.go
-grpcurl -plaintext localhost:10000 matchmaking.v1.MatchmakingService/FindMatch
+make run
+```
+
+Request example:
+
+```bash
+grpcurl -plaintext -d '{"player_id": "123", "player_level": 1}' localhost:8080 matchmaking.v1.MatchmakingService/FindMatch
+ERROR:
+  Code: NotFound
+  Message: Failed to find match
+```
+
+```bash
+grpcurl -plaintext -d '{"player_id": "123", "player_level": 1}' localhost:8080 matchmaking.v1.MatchmakingService/Enqueue
+{
+  "matchId": "1"
+}
 ```

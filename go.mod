@@ -3,6 +3,7 @@ module github.com/ivanlemeshev/matchmaking-service
 go 1.24.0
 
 require (
+	github.com/caarlos0/env v3.5.0+incompatible
 	github.com/stretchr/testify v1.10.0
 	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.5
