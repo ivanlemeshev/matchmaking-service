@@ -133,6 +133,8 @@ func (m *Matchmaker) createMatch(players map[string]*Player) *Match {
 // notifyPlayers notifies players that a match has been found.
 func (m *Matchmaker) notifyPlayers(players map[string]*Player, match *Match) {
 	for _, p := range players {
-		m.foundMatchNotifier.notify(p.ID, match)
+		if err := m.foundMatchNotifier.notify(p.ID, match); err != nil {
+			log.Printf("Error notifying player %s: %v", p.ID, err)
+		}
 	}
 }
