@@ -30,7 +30,8 @@ It is not production-ready and does not have a lot of nessesary features like:
 - etc.
 
 I have implemented only the core functionality and matchmaking logic. It still
-requires a lot of work to be production-ready and some refactoring.
+requires a lot of work to be production-ready, may have bugs and requires some
+refactoring.
 
 I used GitHub Copilot for some autocomplete suggestions, tests and comments.
 
