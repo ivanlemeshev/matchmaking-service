@@ -4,13 +4,13 @@ import (
 	"context"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 )
 
 func TestMatchmaker_FindMatch(t *testing.T) {
-	t.Log("Running test case TestMatchmaker_FindMatch")
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
 	m := New(
@@ -27,6 +27,7 @@ func TestMatchmaker_FindMatch(t *testing.T) {
 	tt := []struct {
 		name    string
 		players []*Player
+		hasErr  bool
 	}{
 		{
 			name: "match found",
@@ -38,6 +39,16 @@ func TestMatchmaker_FindMatch(t *testing.T) {
 				{ID: "5", Level: 10},
 				{ID: "6", Level: 4},
 			},
+			hasErr: false,
+		},
+		{
+			name: "match not found",
+			players: []*Player{
+				{ID: "7", Level: 11},
+				{ID: "8", Level: 16},
+				{ID: "9", Level: 21},
+			},
+			hasErr: true,
 		},
 	}
 
@@ -50,8 +61,13 @@ func TestMatchmaker_FindMatch(t *testing.T) {
 				go func() {
 					defer wg.Done()
 					match, err := m.FindMatch(ctx, player)
-					assert.NoError(t, err)
-					assert.NotNil(t, match)
+					if tc.hasErr {
+						assert.Error(t, err)
+						assert.Nil(t, match)
+					} else {
+						assert.NoError(t, err)
+						assert.NotNil(t, match)
+					}
 				}()
 			}
 
