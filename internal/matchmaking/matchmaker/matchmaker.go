@@ -16,7 +16,7 @@ type Player struct {
 // Match struct to represent a match between players.
 type Match struct {
 	ID      uint64
-	Players []*Player
+	Players map[string]*Player
 }
 
 // Option is a function that configures a Matchmaker.
@@ -96,7 +96,7 @@ func (m *Matchmaker) run(ctx context.Context) {
 	for _, t := range m.tiers {
 		go func(t *tier) {
 			// players is a slice to hold players in the tier for a match.
-			players := make([]*Player, 0)
+			players := make(map[string]*Player)
 
 			for {
 				select {
@@ -107,13 +107,13 @@ func (m *Matchmaker) run(ctx context.Context) {
 					}
 					return
 				case player := <-t.players:
-					players = append(players, player)
+					players[player.ID] = player
 					if len(players) == m.playersInMatch {
 						match := m.createMatch(players)
 						m.notifyPlayers(players, match)
 
 						// reset players slice for next match.
-						players = make([]*Player, 0)
+						players = make(map[string]*Player)
 					}
 				}
 			}
@@ -122,7 +122,7 @@ func (m *Matchmaker) run(ctx context.Context) {
 }
 
 // createMatch creates a match with the given players.
-func (m *Matchmaker) createMatch(players []*Player) *Match {
+func (m *Matchmaker) createMatch(players map[string]*Player) *Match {
 	matchID := atomic.AddUint64(&m.matchID, 1)
 	return &Match{
 		ID:      uint64(matchID),
@@ -131,7 +131,7 @@ func (m *Matchmaker) createMatch(players []*Player) *Match {
 }
 
 // notifyPlayers notifies players that a match has been found.
-func (m *Matchmaker) notifyPlayers(players []*Player, match *Match) {
+func (m *Matchmaker) notifyPlayers(players map[string]*Player, match *Match) {
 	for _, p := range players {
 		m.foundMatchNotifier.notify(p.ID, match)
 	}

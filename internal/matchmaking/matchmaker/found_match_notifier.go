@@ -25,6 +25,11 @@ func (n *foundMatchNotifier) registerListener(playerID string) chan *Match {
 	defer n.mu.Unlock()
 
 	ch := make(chan *Match)
+
+	if _, ok := n.listeners[playerID]; ok {
+		close(n.listeners[playerID])
+	}
+
 	n.listeners[playerID] = ch
 
 	return ch
