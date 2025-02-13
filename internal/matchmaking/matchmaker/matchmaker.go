@@ -3,6 +3,7 @@ package matchmaker
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync/atomic"
 )
 
@@ -10,13 +11,6 @@ import (
 type Player struct {
 	ID    string
 	Level int
-}
-
-// Tier struct to represent a skill tier.
-type Tier struct {
-	MinLevel int
-	MaxLevel int
-	Players  chan *Player
 }
 
 // Match struct to represent a match between players.
@@ -30,99 +24,115 @@ type Option func(*Matchmaker)
 
 // Matchmaker represents a matchmaking system with multiple tiers.
 type Matchmaker struct {
-	PlauersInMatch     int
-	MatchID            int64 // Assume we have a global match ID counter.
-	Tiers              []*Tier
+	playersInMatch     int
+	matchID            int64 // Assume we have a global match ID counter.
+	tiers              []*tier
 	foundMatchNotifier *foundMatchNotifier
 }
 
-// New creates a new Matchmaker with defined tiers.
+// New creates a new Matchmaker.
 func New(ctx context.Context, options ...Option) *Matchmaker {
 	m := Matchmaker{
 		foundMatchNotifier: newFoundMatchNotifier(),
 	}
+
 	for _, o := range options {
 		o(&m)
 	}
+
 	m.run(ctx)
+
 	return &m
 }
 
 // WithPlayersInMatch sets the number of players in a match.
 func WithPlayersInMatch(players int) Option {
 	return func(m *Matchmaker) {
-		m.PlauersInMatch = players
+		m.playersInMatch = players
 	}
 }
 
 // WithTier adds a tier to the Matchmaker.
 func WithTier(minLevel, maxLevel int) Option {
 	return func(m *Matchmaker) {
-		tier := Tier{
-			MinLevel: minLevel,
-			MaxLevel: maxLevel,
-			Players:  make(chan *Player, 100),
-		}
-		m.Tiers = append(m.Tiers, &tier)
+		m.tiers = append(m.tiers, newTier(minLevel, maxLevel))
 	}
 }
 
 // FindMatch finds a match for a player within their tier.
-func (m *Matchmaker) FindMatch(ctx context.Context, player *Player) *Match {
-	fmt.Printf("Player %s looking for match\n", player.ID)
+func (m *Matchmaker) FindMatch(ctx context.Context, player *Player) (*Match, error) {
+	var foundMatch chan *Match
 
-	var tier *Tier
-	var result chan *Match
-
-	for _, tier = range m.Tiers {
-		if player.Level >= tier.MinLevel && player.Level <= tier.MaxLevel {
-			result = m.foundMatchNotifier.registerListener(player.ID)
-			tier.Players <- player
+	for _, t := range m.tiers {
+		if t.isPlayerInTier(player) {
+			foundMatch = m.foundMatchNotifier.registerListener(player.ID)
+			t.addPlayer(player)
 		}
+	}
+
+	if foundMatch == nil {
+		return nil, fmt.Errorf("player %s not in any tier", player.ID)
 	}
 
 	select {
 	case <-ctx.Done():
-		return nil
-	case match := <-result:
-		fmt.Printf("Match %d found for player %s\n", match.ID, player.ID)
+		if ctx.Err() != context.Canceled {
+			return nil, ctx.Err()
+		}
+		return nil, nil
+	case match := <-foundMatch:
+		if match == nil {
+			return nil, fmt.Errorf("match not found for player %s", player.ID)
+		}
+
 		m.foundMatchNotifier.unregisterListener(player.ID)
-		return match
+
+		return match, nil
 	}
 }
 
+// run runs matchmaking for each tier in background goroutines.
 func (m *Matchmaker) run(ctx context.Context) {
-	for _, tier := range m.Tiers {
-		fmt.Printf("Starting tier matcher %d-%d\n", tier.MinLevel, tier.MaxLevel)
-		go func(tier *Tier) {
+	for _, t := range m.tiers {
+		go func(t *tier) {
+			// players is a slice to hold players in the tier for a match.
 			players := make([]*Player, 0)
 
 			for {
 				select {
 				case <-ctx.Done():
+					if ctx.Err() != context.Canceled {
+						log.Printf("Context error in matchmaker tier %d-%d: %v",
+							t.minLevel, t.maxLevel, ctx.Err())
+					}
 					return
-				case player := <-tier.Players:
+				case player := <-t.players:
 					players = append(players, player)
-					fmt.Printf("Player %s joined tier %d-%d\n", player.ID, tier.MinLevel, tier.MaxLevel)
-					fmt.Printf("Players in tier %d-%d: %d\n", tier.MinLevel, tier.MaxLevel, len(players))
-					if len(players) == m.PlauersInMatch {
-						matchID := atomic.AddInt64(&m.MatchID, 1)
-						fmt.Printf("Match %d created for tier %d-%d\n", matchID, tier.MinLevel, tier.MaxLevel)
-						match := Match{
-							ID:      matchID,
-							Players: players,
-						}
+					if len(players) == m.playersInMatch {
+						match := m.createMatch(players)
+						m.notifyPlayers(players, match)
 
-						// Send match to all players in the match.
-						for _, p := range players {
-							m.foundMatchNotifier.notify(p.ID, &match)
-						}
-
-						fmt.Printf("Match %d players notified\n", matchID)
+						// reset players slice for next match.
 						players = make([]*Player, 0)
 					}
 				}
 			}
-		}(tier)
+		}(t)
+	}
+}
+
+// createMatch creates a match with the given players.
+func (m *Matchmaker) createMatch(players []*Player) *Match {
+	matchID := atomic.AddInt64(&m.matchID, 1)
+	return &Match{
+		ID:      matchID,
+		Players: players,
+	}
+}
+
+// notifyPlayers notifies players that a match has been found.
+func (m *Matchmaker) notifyPlayers(players []*Player, match *Match) {
+	for _, p := range players {
+		m.foundMatchNotifier.notify(p.ID, match)
 	}
 }

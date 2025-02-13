@@ -12,7 +12,7 @@ func TestFoundMatchNotifier(t *testing.T) {
 
 	var result1, result2, result3 chan *Match
 
-	t.Run("should not have listeners on creation", func(t *testing.T) {
+	t.Run("should have no listeners on creation", func(t *testing.T) {
 		assert.NotNil(t, notifier)
 		assert.Equal(t, 0, len(notifier.listeners))
 	})

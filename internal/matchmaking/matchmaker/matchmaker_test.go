@@ -4,6 +4,8 @@ import (
 	"context"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestMatchmaker_FindMatch(t *testing.T) {
@@ -47,10 +49,9 @@ func TestMatchmaker_FindMatch(t *testing.T) {
 				wg.Add(1)
 				go func() {
 					defer wg.Done()
-					match := m.FindMatch(ctx, player)
-					if match == nil {
-						t.Error("expected match to be found")
-					}
+					match, err := m.FindMatch(ctx, player)
+					assert.NoError(t, err)
+					assert.NotNil(t, match)
 				}()
 			}
 
