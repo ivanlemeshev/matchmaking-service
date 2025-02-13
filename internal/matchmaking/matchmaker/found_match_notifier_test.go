@@ -50,9 +50,14 @@ func TestFoundMatchNotifier(t *testing.T) {
 			assert.Equal(t, matchID, (<-result3).ID)
 		}()
 
-		notifier.notify("1", &match)
-		notifier.notify("2", &match)
-		notifier.notify("3", &match)
+		err := notifier.notify("1", &match)
+		assert.NoError(t, err)
+
+		err = notifier.notify("2", &match)
+		assert.NoError(t, err)
+
+		err = notifier.notify("3", &match)
+		assert.NoError(t, err)
 
 		wg.Wait()
 	})
