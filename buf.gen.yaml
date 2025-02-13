@@ -10,5 +10,8 @@ plugins:
   - remote: buf.build/protocolbuffers/go
     out: pkg
     opt: paths=source_relative
+  - remote: buf.build/grpc/go
+    out: pkg
+    opt: paths=source_relative
 inputs:
   - directory: api
