@@ -59,7 +59,7 @@ ERROR:
 ```
 
 ```bash
-grpcurl -plaintext -d '{"player_id": "123", "player_level": 1}' localhost:8080 matchmaking.v1.MatchmakingService/Enqueue
+grpcurl -plaintext -d '{"player_id": "123", "player_level": 1}' localhost:8080 matchmaking.v1.MatchmakingService/FindMatch
 {
   "matchId": "1"
 }
